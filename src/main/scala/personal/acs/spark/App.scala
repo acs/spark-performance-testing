@@ -135,8 +135,12 @@ object App {
   }
 
   def union(spark:SparkSession): DataFrame = {
-    val df = build_df(spark)
-    df.union(df)
+    val df = build_df_range(spark, 1000*1000*10)
+    val df1 = build_df_range(spark, 1000*1000*11)
+    val df2 = build_df_range(spark, 1000*1000*12)
+    val df3 = build_df_range(spark, 1000*1000*13)
+    val df4 = build_df_range(spark, 1000*1000*14)
+    df.union(df1).union(df2).union(df3).union(df4)
   }
 
   def checkpoint(spark:SparkSession): DataFrame = {
@@ -184,7 +188,7 @@ object App {
     // basic_join(spark).count()
     // basic_join_left_anti(spark).count()
     multi_join_from_range(spark).count()
-    // union(spark).count()
+    union(spark).count()
     // checkpoint(spark)
 
     Thread.sleep(1000*1000)
