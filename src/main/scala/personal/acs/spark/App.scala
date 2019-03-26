@@ -1,7 +1,9 @@
 package personal.acs.spark
 
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import scala.util.Random
+
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
+import org.apache.spark.sql.types.{StructField, StructType, IntegerType, StringType}
 
 /**
  * @author Alvaro del Castillo <alvaro.delcastillo@gmail.com>
@@ -21,6 +23,24 @@ object App {
     println("sampled count = " + smpCount)
   }
 
+  def build_df_with_schema(spark:SparkSession): DataFrame = {
+    val someData = Seq(
+      Row(1, "bat"),
+      Row(2, "mouse"),
+      Row(3, "horse")
+    )
+
+    val someSchema = List(
+      StructField("id", IntegerType, true),
+      StructField("name", StringType, true)
+    )
+
+    spark.createDataFrame(
+      spark.sparkContext.parallelize(someData),
+      StructType(someSchema)
+    )
+  }
+
   def build_df(spark:SparkSession): DataFrame = {
     import spark.implicits._
 
@@ -30,15 +50,44 @@ object App {
     scalaList.toDF(COLS_TEST_NAMES: _*)
   }
 
-  def basic_df(spark: SparkSession): Unit = {
-    val df = build_df(spark)
-    df.explain(true)
-    df.show()
+  def build_df_range(spark:SparkSession): Dataset[java.lang.Long] = {
+    spark.range(0, 10)
   }
 
+
+  def build_df_random(spark:SparkSession, nrows:Integer): DataFrame = {
+    import spark.implicits._
+
+    // In this implementation the full generation is done in the driver
+    // Seq.fill(nrows)(nrows).flatMap(row => Seq.fill(row)(Random.nextInt)).toDF("id")
+    // The seed in created in the driver
+    val seedRdd = spark.sparkContext.parallelize(Seq.fill(nrows)(nrows))
+    // The complete df is generated in the executors
+    seedRdd.flatMap(records => Seq.fill(records)(Random.nextInt)).toDF("id")
+  }
+
+
+  def auto_join(spark: SparkSession): DataFrame = {
+    // val df = build_df(spark)
+    val df = build_df_random(spark, 1000)
+    df.join(df, "id")
+  }
+
+  def auto_join_cache(spark: SparkSession): DataFrame = {
+    // val df = build_df(spark)
+    val df = build_df_random(spark, 1000)
+
+    df.cache()
+    df.join(df, "id")
+  }
+
+
   def basic_join(spark: SparkSession): DataFrame = {
-    val df = build_df(spark)
-    val df1 = build_df(spark)
+    // val df = build_df(spark)
+    // val df1 = build_df(spark)
+    val df = build_df_random(spark, 1000)
+    val df1 = build_df_random(spark, 1000)
+
     df.join(df1, "id")
   }
 
@@ -79,10 +128,11 @@ object App {
       .master("local[*]")
       .getOrCreate()
 
-    basic_rdd(spark)
-    basic_df(spark)
+    // basic_rdd(spark)
+    auto_join(spark).count()
+    auto_join_cache(spark).count()
     basic_join(spark).count()
-    basic_join_left_anti(spark).count()
+    // basic_join_left_anti(spark).count()
 
     Thread.sleep(1000*1000)
 
