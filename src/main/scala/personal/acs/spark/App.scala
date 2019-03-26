@@ -157,8 +157,22 @@ object App {
     // TODO: How to read the checkpointed RDD in the future? (in a new spark app execution)
     val df_checkpointed = df_join.checkpoint()
     df_checkpointed
+  }
 
+  def duplicates(spark:SparkSession): DataFrame = {
+    val df = build_df_range(spark, 1000*1000*10)
+    val df1 = build_df_range(spark, 1000*1000*10)
 
+    val dfUnionDuplicates = df.union(df1)
+
+    val dfUnique = dfUnionDuplicates.dropDuplicates("id")
+
+    val duplicates_count = dfUnionDuplicates.count()
+    val unique_count = dfUnique.count()
+    // distinct needs more resources than dropDuplicates
+    val distinct_count = dfUnique.distinct().count()
+
+    dfUnique
   }
 
 
@@ -187,9 +201,10 @@ object App {
     // auto_join_cache(spark).count()
     // basic_join(spark).count()
     // basic_join_left_anti(spark).count()
-    multi_join_from_range(spark).count()
-    union(spark).count()
+    // multi_join_from_range(spark).count()
+    // union(spark).count()
     // checkpoint(spark)
+    duplicates(spark)
 
     Thread.sleep(1000*1000)
 
