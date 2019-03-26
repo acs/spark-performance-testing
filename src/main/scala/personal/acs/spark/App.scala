@@ -1,9 +1,9 @@
 package personal.acs.spark
 
 import scala.util.Random
-
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
-import org.apache.spark.sql.types.{StructField, StructType, IntegerType, StringType}
+import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructType}
+import org.apache.spark.storage.StorageLevel
 
 /**
  * @author Alvaro del Castillo <alvaro.delcastillo@gmail.com>
@@ -75,7 +75,7 @@ object App {
 
   def auto_join_cache(spark: SparkSession): DataFrame = {
     // val df = build_df(spark)
-    val df = build_df_random(spark, 1000)
+    val df = build_df_random(spark, 100)
 
     df.cache()
     df.join(df, "id")
@@ -85,8 +85,8 @@ object App {
   def basic_join(spark: SparkSession): DataFrame = {
     // val df = build_df(spark)
     // val df1 = build_df(spark)
-    val df = build_df_random(spark, 1000)
-    val df1 = build_df_random(spark, 1000)
+    val df = build_df_random(spark, 100)
+    val df1 = build_df_random(spark, 100)
 
     df.join(df1, "id")
   }
@@ -112,12 +112,35 @@ object App {
 
   }
 
-  def union(spark:SparkSession): Unit = {
-
+  def union(spark:SparkSession): DataFrame = {
+    val df = build_df(spark)
+    df.union(df)
   }
 
-  def persist(spark:SparkSession): Unit = {
+  def checkpoint(spark:SparkSession): DataFrame = {
+    // Set the checkpoint directory
+    spark.sparkContext.setCheckpointDir("/tmp/checkpoint")
 
+    val df = build_df(spark)
+    val df_join = df.join(df, "id")
+    // https://github.com/JerryLead/SparkInternals/blob/master/markdown/english/6-CacheAndCheckpoint.md#checkpoint
+    // http://www.lewisgavin.co.uk/Spark-Performance
+    // https://www.waitingforcode.com/apache-spark/checkpointing-in-spark/read
+    // Checkpoint persistence could be the HDFS so it is fault tolerant, with high capacity ....
+    val df_checkpointed = df_join.checkpoint()
+    df_checkpointed
+  }
+
+
+  def persist(spark:SparkSession): Unit = {
+    val df = build_df(spark)
+    val df_join = df.join(df, "id")
+
+    // The persistence is done in a local directory
+    // https://stackoverflow.com/questions/48430366/where-is-my-sparkdf-persistdisk-only-data-stored
+    val df_persist_disk = df_join.persist(StorageLevel.DISK_ONLY)
+
+    val l = ""
   }
 
 
@@ -129,10 +152,12 @@ object App {
       .getOrCreate()
 
     // basic_rdd(spark)
-    auto_join(spark).count()
-    auto_join_cache(spark).count()
-    basic_join(spark).count()
+    // auto_join(spark).count()
+    // auto_join_cache(spark).count()
+    // basic_join(spark).count()
     // basic_join_left_anti(spark).count()
+    // union(spark).count()
+    checkpoint(spark)
 
     Thread.sleep(1000*1000)
 
