@@ -82,7 +82,9 @@ object App {
 
   def auto_join_cache(spark: SparkSession): DataFrame = {
     // val df = build_df(spark)
-    val df = build_df_random(spark, 100)
+    // val df = build_df_random(spark, 100)
+    val df = build_df_range(spark, 1000*1000*10)
+
 
     df.cache()
     df.join(df, "id")
@@ -104,6 +106,19 @@ object App {
     df.join(df1, Seq("id"), "left_anti")
   }
 
+
+  def multi_join_from_range(spark: SparkSession): DataFrame = {
+    // If the nrows for the dataframe is the same, catalyst detects that all the
+    // dataframes are the same and optimize the process
+    // In this sample we are forcing different dataframes
+    val df = build_df_range(spark, 1000*1000*10)
+    val df1 = build_df_range(spark, 1000*1000*11)
+    val df2 = build_df_range(spark, 1000*1000*12)
+    val df3 = build_df_range(spark, 1000*1000*13)
+    val df4 = build_df_range(spark, 1000*1000*14)
+
+    df.join(df1, "id").join(df2, "id").join(df3, "id").join(df4, "id")
+  }
 
   def multi_join(spark: SparkSession): DataFrame = {
     val df = build_df(spark)
@@ -164,10 +179,11 @@ object App {
 
     // basic_rdd(spark)
     // print(s"Total join rows ${auto_join(spark).count()}")
-    auto_join(spark).show(1000)
+    // auto_join_cache(spark).show(1000)
     // auto_join_cache(spark).count()
     // basic_join(spark).count()
     // basic_join_left_anti(spark).count()
+    multi_join_from_range(spark).count()
     // union(spark).count()
     // checkpoint(spark)
 
