@@ -1,6 +1,8 @@
 package personal.acs.spark
 
 import scala.util.Random
+
+import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructType}
 import org.apache.spark.storage.StorageLevel
@@ -9,6 +11,9 @@ import org.apache.spark.storage.StorageLevel
  * @author Alvaro del Castillo <alvaro.delcastillo@gmail.com>
  */
 object App {
+
+  val logger = Logger.getLogger(this.getClass.getName)
+
 
   def basic_rdd(spark: SparkSession): Unit = {
     val sc = spark.sparkContext
@@ -50,8 +55,8 @@ object App {
     scalaList.toDF(COLS_TEST_NAMES: _*)
   }
 
-  def build_df_range(spark:SparkSession): Dataset[java.lang.Long] = {
-    spark.range(0, 10)
+  def build_df_range(spark:SparkSession, nrows:Int): DataFrame = {
+    spark.range(0, nrows).toDF("id")
   }
 
 
@@ -69,7 +74,9 @@ object App {
 
   def auto_join(spark: SparkSession): DataFrame = {
     // val df = build_df(spark)
-    val df = build_df_random(spark, 1000)
+    // val df = build_df_random(spark, 1000)
+    val df = build_df_range(spark, 1000*1000*10)
+
     df.join(df, "id")
   }
 
@@ -127,8 +134,12 @@ object App {
     // http://www.lewisgavin.co.uk/Spark-Performance
     // https://www.waitingforcode.com/apache-spark/checkpointing-in-spark/read
     // Checkpoint persistence could be the HDFS so it is fault tolerant, with high capacity ....
+    // TODO: Policy for cleaning the checkpointed df? Just remove the directory using HDFS API?
+    // TODO: How to read the checkpointed RDD in the future? (in a new spark app execution)
     val df_checkpointed = df_join.checkpoint()
     df_checkpointed
+
+
   }
 
 
@@ -152,12 +163,13 @@ object App {
       .getOrCreate()
 
     // basic_rdd(spark)
-    // auto_join(spark).count()
+    // print(s"Total join rows ${auto_join(spark).count()}")
+    auto_join(spark).show(1000)
     // auto_join_cache(spark).count()
     // basic_join(spark).count()
     // basic_join_left_anti(spark).count()
     // union(spark).count()
-    checkpoint(spark)
+    // checkpoint(spark)
 
     Thread.sleep(1000*1000)
 
