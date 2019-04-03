@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="App" type="Application" factoryName="Application">
+  <configuration default="false" name="PerfSpark" type="Application" factoryName="Application">
     <option name="INCLUDE_PROVIDED_SCOPE" value="true" />
-    <option name="MAIN_CLASS_NAME" value="personal.acs.spark.App" />
+    <option name="MAIN_CLASS_NAME" value="personal.acs.spark.PerfSpark" />
     <module name="spark-performance-testing" />
     <extension name="coverage">
       <pattern>
