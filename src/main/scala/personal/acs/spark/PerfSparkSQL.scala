@@ -3,8 +3,46 @@ package personal.acs.spark
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.functions.{col, first, max}
+import org.apache.spark.sql.types.{StructType,StructField,StringType}
+
+ import org.apache.spark.sql.Row
 
 object PerfSparkSQL {
+
+  /**
+    * Show the basic transformatiosn in SparkSQL and their performance
+    * https://spark.apache.org/docs/latest/api/scala/index.html#org.apache.spark.sql.Dataset
+    *
+    * @param sparkSession
+    */
+  def execBasicTrans(sparkSession: SparkSession): Unit = {
+    import sparkSession.implicits._
+    // Exception for mixing different types
+    // val df = Seq((1,2),(12,22),("a","b")).toDF("col1", "col2")
+    val df = Seq(("a","b")).toDF("col1", "col2")
+    df.show()
+    df.printSchema()
+  }
+
+  /**
+    * Show the best way to modify the schema of a Dataframe to adapt it
+    *
+    * @param spark
+    * @return
+    */
+
+  def changeSchema(spark:SparkSession): DataFrame = {
+    val sc = spark.sparkContext
+
+    //Create Schema RDD
+    val schema_string = "name, id, dept"
+    val schema_rdd = StructType(schema_string.split(",").map(fieldName => StructField(fieldName, StringType, true)) )
+
+    //Create Empty DataFrame
+    val empty_df = spark.sqlContext.createDataFrame(sc.emptyRDD[Row], schema_rdd)
+
+    empty_df
+  }
 
   /**
     * Select the row to use when mixing duplicates
@@ -61,6 +99,8 @@ object PerfSparkSQL {
     // for Dataframes (and at some point with Datasets)
     // https://spark.apache.org/docs/latest/api/scala/index.html#org.apache.spark.sql.Dataset
 
-    selectDuplicates(spark)
+    // selectDuplicates(spark)
+    // changeSchema(spark).show()
+    execBasicTrans(spark)
   }
 }
