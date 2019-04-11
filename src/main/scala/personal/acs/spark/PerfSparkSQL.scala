@@ -1,11 +1,12 @@
 package personal.acs.spark
 
+import java.io.{File, FileOutputStream}
+
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.functions.{col, first, max}
-import org.apache.spark.sql.types.{StructType,StructField,StringType}
-
- import org.apache.spark.sql.Row
+import org.apache.spark.sql.types.{StringType, StructField, StructType}
+import org.apache.spark.sql.Row
 
 object PerfSparkSQL {
 
@@ -19,9 +20,17 @@ object PerfSparkSQL {
     import sparkSession.implicits._
     // Exception for mixing different types
     // val df = Seq((1,2),(12,22),("a","b")).toDF("col1", "col2")
-    val df = Seq(("a","b")).toDF("col1", "col2")
-    df.show()
+    val df = Seq((1,"a0","b0"), (2, "a1", "b1")).toDF("id", "col1", "col2")
+    val df1 = Seq((1001,"c0","d0"), (1002, "c1", "d1")).toDF("id", "col1", "col2")
+
+    df.union(df1).show(true)
     df.printSchema()
+
+    df.intersect(df1).show()
+    df.join(df1).show()
+
+    df.take(10)
+    df.head()
   }
 
   /**
@@ -40,6 +49,8 @@ object PerfSparkSQL {
 
     //Create Empty DataFrame
     val empty_df = spark.sqlContext.createDataFrame(sc.emptyRDD[Row], schema_rdd)
+
+    // TODO: complete the samples
 
     empty_df
   }
@@ -87,6 +98,22 @@ object PerfSparkSQL {
     df_union.dropDuplicates()
   }
 
+  def load_github_df(spark: SparkSession): DataFrame = {
+    // Github data must be already downloaded using wget
+    // wget http://data.githubarchive.org/2015-03-01-{0..23}.json.gz
+    val data_path = "github-data"
+    // when you create a DataFrame from a structured
+    // dataset (in this case, JSON), Spark is able to infer a schema by making a pass over
+    // the entire JSON dataset that’s being loaded
+    // Just the same way Elasticsearch does mapping infer
+    val homeDir = System.getenv("HOME")
+    val ghdate = "2015-03-01-0.json"
+    val ghLog = spark.read.json(homeDir + "/github-data/" + ghdate)
+    ghLog.printSchema()
+    println(s"Events in ${ghdate}: ${ghLog.count()}")
+    ghLog
+  }
+
   def main(args: Array[String]) {
     println("Testing the performance in SparkSQL")
 
@@ -101,6 +128,7 @@ object PerfSparkSQL {
 
     // selectDuplicates(spark)
     // changeSchema(spark).show()
-    execBasicTrans(spark)
+    // execBasicTrans(spark)
+    load_github_df(spark)
   }
 }
