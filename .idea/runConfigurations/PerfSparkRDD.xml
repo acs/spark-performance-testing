@@ -1,5 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="PerfSparkRDD" type="Application" factoryName="Application">
+    <option name="INCLUDE_PROVIDED_SCOPE" value="true" />
     <option name="MAIN_CLASS_NAME" value="personal.acs.spark.PerfSparkRDD" />
     <module name="spark-performance-testing" />
     <extension name="coverage">
