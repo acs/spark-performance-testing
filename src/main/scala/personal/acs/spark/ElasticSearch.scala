@@ -3,6 +3,9 @@ package personal.acs.spark
 import org.apache.spark.sql.SparkSession
 import org.elasticsearch.spark._
 
+
+// https://www.elastic.co/guide/en/elasticsearch/hadoop/master/spark.html
+
 object Elasticsearch {
 
   def main(args: Array[String]): Unit = {
@@ -24,6 +27,13 @@ object Elasticsearch {
     spark.sparkContext.makeRDD(
       Seq(numbers, airports)
     ).saveToEs("spark-es/items")
+
+    // Writing existing JSON to Elasticsearch
+    // spark.sparkContext.makeRDD(Seq(json1, json2)).saveJsonToEs("spark/json-trips")
+
+    // Reading data from Elasticsearch
+    // val RDD = spark.sparkContext.esRDD("radio/artists")
+    // val people = sql.esDF("spark/people")
   }
 
 }
