@@ -1,0 +1,17 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="PerfSparkJoins" type="Application" factoryName="Application">
+    <option name="INCLUDE_PROVIDED_SCOPE" value="true" />
+    <option name="MAIN_CLASS_NAME" value="personal.acs.spark.PerfSparkJoins" />
+    <module name="spark-performance-testing" />
+    <option name="VM_PARAMETERS" value="-Xmx512m -Xms128m" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="personal.acs.spark.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

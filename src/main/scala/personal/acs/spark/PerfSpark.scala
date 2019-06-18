@@ -148,6 +148,7 @@ object PerfSpark {
 
   def union(spark:SparkSession): DataFrame = {
     val df = build_df_range(spark, NROWS)
+    df.printSchema()
     val df1 = build_df_range(spark, NROWS)
     val df2 = build_df_range(spark, NROWS)
     val df3 = build_df_range(spark, NROWS)
